@@ -54,10 +54,9 @@ void EmptyScreen(HANDLE hStdOut)
         Sleep(100);
     }
 }
-
+int contrng = 1;
 int rng(int seed, unsigned int range)
 {
-    static int contrng = 1;
     int RandomGen1;
     srand(contrng);
     int g = rand();
@@ -142,6 +141,7 @@ int keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
     int done = 0;
     while(done == 0)
     {
+        contrng++;
         keyprev = keynew;
         keynew = key_press();
         if(keyprev != keynew)
@@ -339,8 +339,6 @@ int WordleRun(HANDLE hStdOut, char ListWords[][5])
             }
             //keycheck(hStdOut, wordtyped, ycoord);
             runcheck = wordExist(wordtyped, ListWords);
-            //emptyScreen(hStdOut, 0, 19, ycoord);
-            //emptyScreen(HANDLE hStdOut, int option, int size, int ycoord)
             for(int clear = 0; clear < 19; clear++)
             {
                 write_symbol_in_color(hStdOut, clear + 10, ycoord, " ", FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
@@ -422,6 +420,9 @@ int Menu(HANDLE hStdOut)
                         //keynew = 0; keyprev = 0;
                         run = 0;
                         break;
+                    case 50:
+                        break;
+
                 }
             }
         }
