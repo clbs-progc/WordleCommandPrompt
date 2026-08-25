@@ -18,16 +18,28 @@ void write_symbol_in_color(HANDLE h, SHORT x, SHORT y, const char* symbol, WORD 
     WriteConsoleOutputAttribute(h, &attribute, 1, here, &written);
     WriteConsoleOutputCharacterA(h, symbol, 1, here, &written);
 }
-void rngtestprint(HANDLE h, SHORT x, SHORT y, const char* symbol, WORD color)
+void stringprint(HANDLE h, SHORT x, SHORT y, const char* symbol, int set, WORD color)
 {
     DWORD length = (DWORD)strlen(symbol);
     COORD here;
+    COORD here2;
     here.X = x;
+    here2.X = x - length;
     here.Y = y;
-
+    here2.Y = y;
     WORD attribute = color;
     DWORD written = 0;
-    //WriteConsoleOutputAttribute(h, &attribute, length, here, &written);
+    DWORD written2 = 0;
+    if(set != 0)
+    {
+        WriteConsoleOutputAttribute(h, &attribute, length, here2, &written);
+    }
+    else
+    {
+        here2.X = 0;
+        here2.Y = 0;
+        WriteConsoleOutputAttribute(h, &attribute, length, here2, &written);
+    }
     WriteConsoleOutputCharacterA(h, symbol, length, here, &written);
 }
 
@@ -61,12 +73,12 @@ int rng(int seed, unsigned int range)
 
 void rngTest(HANDLE hStdOut)
 {
-    int max = 1000000;
+    int max = 100000;
     int maxnumb = 10;
     int percent[maxnumb];
     int random;
     char a[10];
-    char stringtext[max];
+    char stringtext[10];
     //char *ptr = &a;
     int contprint = 0;
     float a2;
@@ -83,15 +95,18 @@ void rngTest(HANDLE hStdOut)
         random = rng(cont, maxnumb);
         percent[random] = percent[random] + 1;
         snprintf(stringtext, sizeof(stringtext), "%i", percent[random]);
-        rngtestprint(hStdOut, 12, 5+random, stringtext, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+        stringprint(hStdOut, 12, 5+random, stringtext, 0, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
         snprintf(stringtext, sizeof(stringtext), "%i", random);
-        rngtestprint(hStdOut, 12, 16, stringtext, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-
+        stringprint(hStdOut, 12, 16, stringtext, 0, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+        snprintf(stringtext, sizeof(stringtext), "%i", cont);
+        stringprint(hStdOut, 12, 4, stringtext, 0, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+        //Sleep(500);
     }
     for(int cont = 0; cont < maxnumb; cont++)
     {
         a2 = (float) percent[cont]/max;
-        printf(" %i: %.4f ", cont, a2);
+        snprintf(stringtext, sizeof(stringtext), "%.4f", a2);
+        stringprint(hStdOut, 22, 5+cont, stringtext, 0, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
     }
 }
 
@@ -107,10 +122,10 @@ int key_press()
     }
     //return 0;
 }
-void * keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
+int keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
 {
     char keyprev = 0, keynew = 0;
-    static int xcoord = 0;
+    int xcoord = 0;
     int done = 0;
     while(done == 0)
     {
@@ -120,6 +135,10 @@ void * keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
         {
             keyprev = keynew; //w a
             //if(keynew > 64 && keynew < 91)
+            if(keyprev == 27)
+            {
+                return 1;
+            }
             if(xcoord < 5)
             {
 
@@ -154,6 +173,7 @@ void * keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
         }
     }
     done = 0;
+    return 0;
 }
 void pullWord(char ReturnWordArray[][5])
 {
@@ -255,7 +275,7 @@ int main()
     int wordsize = 5;
     char wordpulled[5];
     char wordtyped[5];
-    int ycoord = 0;
+    int ycoord = 1;
     int runcheck = 0;
     char ListWords[14855][5];
     int randomnumber = rng(time(&t), 14855);
@@ -267,10 +287,18 @@ int main()
         //write_symbol_in_color(hStdOut, cont + 10, 10, &wordpulled[cont], FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
     }
     //rngTest(hStdOut);
-    char Warn[100] = "Word doesn't exist!"; //19
-    while(ycoord < 6)
+    char Warn[20] = "Word doesn't exist!"; //19
+    int esccheck = 0;
+    while(ycoord < 7)
     {
-        keycheck(hStdOut, wordtyped, ycoord);
+        //esccheck = keycheck(hStdOut, wordtyped, ycoord);
+        //keycheck(hStdOut, wordtyped, ycoord);
+        if(keycheck(hStdOut, wordtyped, ycoord) == 1)
+        {
+            ycoord = 10;
+            runcheck = 10;
+            break;
+        }
         runcheck = wordExist(wordtyped, ListWords);
         while(runcheck != 1)
         {
@@ -283,19 +311,34 @@ int main()
             {
                 emptyScreen(hStdOut, 1, MAXLETTERS, ycoord);
             }
-            keycheck(hStdOut, wordtyped, ycoord);
+            if(keycheck(hStdOut, wordtyped, ycoord) == 1)
+            {
+                ycoord = 10;
+                runcheck = 10;
+                break;
+            }
+            //keycheck(hStdOut, wordtyped, ycoord);
             runcheck = wordExist(wordtyped, ListWords);
             emptyScreen(hStdOut, 0, 19, ycoord);
         }
-        if(wordlerun(hStdOut, wordpulled, wordtyped, ycoord) != 5)
+        switch(runcheck)
         {
-            ycoord++;
-        }
-        else
-        {
-            ycoord = 6;
+            case 10:
+                break;
+
+            default:
+                if(wordlerun(hStdOut, wordpulled, wordtyped, ycoord) != 5)
+                {
+                    ycoord++;
+                }
+                else
+                {
+                    ycoord = 10;
+                }
         }
     }
+    sprintf(Warn , "Word was: %s", wordpulled);
+    stringprint(hStdOut, 0, 8, Warn, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
     Sleep(2);
     system("pause");
