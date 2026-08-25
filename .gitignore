@@ -3,3 +3,9 @@ wordle.layout
 wordle.layout
 bin/Debug/wordle.exe
 obj/Debug/main.o
+/bin/Debug
+/obj/Debug
+wordle.layout
+*.exe
+*.o
+*.layout
