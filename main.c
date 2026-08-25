@@ -43,6 +43,18 @@ void stringprint(HANDLE h, SHORT x, SHORT y, const char* symbol, int set, WORD c
     WriteConsoleOutputCharacterA(h, symbol, length, here, &written);
 }
 
+void EmptyScreen(HANDLE hStdOut)
+{
+    for(int y = 0; y < 20; y++)
+    {
+        for(int x = 0; x < 100; x++)
+        {
+            write_symbol_in_color(hStdOut, x, y, " ", FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+        }
+        Sleep(100);
+    }
+}
+
 int rng(int seed, unsigned int range)
 {
     static int contrng = 1;
@@ -169,11 +181,12 @@ int keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
             }
 
         }
+        Sleep(10);
     }
     done = 0;
     return 0;
 }
-void pullWord(char ReturnWordArray[][5])
+void LoadWordList(char ReturnWordArray[][5])
 {
     char word[6];
     char pulledword[6];
@@ -217,7 +230,7 @@ int wordExist(char *wordtyped, char ListWords[][5])
 
     return 0;
 }
-int wordlerun(HANDLE hStdOut , char *wordpulled, char *wordtyped, int ycoord)
+int WordleRunLogic(HANDLE hStdOut , char *wordpulled, char *wordtyped, int ycoord)
 {
     int value = 0;
     for(int xcoord = 0; xcoord< MAXLETTERS; xcoord++)
@@ -246,36 +259,20 @@ int wordlerun(HANDLE hStdOut , char *wordpulled, char *wordtyped, int ycoord)
     return value;
 
 }
-void emptyScreen(HANDLE hStdOut, int option, int size, int ycoord)
+int WordleRun(HANDLE hStdOut, char ListWords[][5])
 {
-    switch(option)
-    {
-        case 0: //Word not exist
-            for(int cont = 0; cont < size; cont++)
-            {
-                write_symbol_in_color(hStdOut, cont + 10, ycoord, " ", FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-            }
-            break;
-        case 1://wordtyped
-            for(int cont = size-1; cont >= 0; cont--)
-            {
-                write_symbol_in_color(hStdOut, cont, ycoord, " ", FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-                usleep(1000);
-            }
-            break;
-    }
-}
-
-int main()
-{
+    write_symbol_in_color(hStdOut, 0, 0, "W", FOREGROUND_GREEN | FOREGROUND_RED);
+    write_symbol_in_color(hStdOut, 1, 0, "O", FOREGROUND_GREEN | FOREGROUND_RED);
+    write_symbol_in_color(hStdOut, 2, 0, "R", FOREGROUND_GREEN | FOREGROUND_RED);
+    write_symbol_in_color(hStdOut, 3, 0, "D", FOREGROUND_GREEN | FOREGROUND_RED);
+    write_symbol_in_color(hStdOut, 4, 0, "L", FOREGROUND_GREEN | FOREGROUND_RED);
+    write_symbol_in_color(hStdOut, 5, 0, "E", FOREGROUND_GREEN | FOREGROUND_RED);
     char wordpulled[5];
     char wordtyped[5];
-    char ListWords[14855][5];
-    int wordsize = 5, ycoord = 1, runcheck = 0, rngrun = 1;
+    //char ListWords[14855][5];
+    int wordsize = 5, ycoord = 2, runcheck = 0, rngrun = 1;
     int randomnumber = rng(time(&t), 14855);
     //int randomnumber = 10469;
-    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    pullWord(ListWords);
     for(int cont = 0; cont < 5; cont++)
     {
         wordtyped[cont] = ' ';
@@ -308,7 +305,7 @@ int main()
     }
     //rngTest(hStdOut);
     char Warn[20] = "Word doesn't exist!"; //19
-    while(ycoord < 7)
+    while(ycoord < 8)
     {
         if(keycheck(hStdOut, wordtyped, ycoord) == 1)
         {
@@ -326,7 +323,12 @@ int main()
             }
             for(int cont = 0; cont < 5; cont++)
             {
-                emptyScreen(hStdOut, 1, MAXLETTERS, ycoord);
+                //emptyScreen(hStdOut, 1, MAXLETTERS, ycoord);
+                for(int clear = MAXLETTERS - 1; clear >= 0; clear--)
+                {
+                    write_symbol_in_color(hStdOut, clear, ycoord, " ", FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+                    usleep(1000);
+                }
                 //write_symbol_in_color(hStdOut, cont, ycoord, " ", FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
             }
             if(keycheck(hStdOut, wordtyped, ycoord) == 1)
@@ -337,7 +339,12 @@ int main()
             }
             //keycheck(hStdOut, wordtyped, ycoord);
             runcheck = wordExist(wordtyped, ListWords);
-            emptyScreen(hStdOut, 0, 19, ycoord);
+            //emptyScreen(hStdOut, 0, 19, ycoord);
+            //emptyScreen(HANDLE hStdOut, int option, int size, int ycoord)
+            for(int clear = 0; clear < 19; clear++)
+            {
+                write_symbol_in_color(hStdOut, clear + 10, ycoord, " ", FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+            }
         }
         switch(runcheck)
         {
@@ -345,7 +352,7 @@ int main()
                 break;
 
             default:
-                if(wordlerun(hStdOut, wordpulled, wordtyped, ycoord) != 5)
+                if(WordleRunLogic(hStdOut, wordpulled, wordtyped, ycoord) != 5)
                 {
                     ycoord++;
                 }
@@ -357,8 +364,75 @@ int main()
     }
     sprintf(Warn , "Word was: %.5s", wordpulled);
     stringprint(hStdOut, 0, 8, Warn, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    sprintf(Warn , "Press ESC to Leave");
+    stringprint(hStdOut, 0, 10, Warn, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    Sleep(500);
+    while(1)
+    {
+        if(keycheck(hStdOut, wordtyped, ycoord) == 1)
+        {
+            stringprint(hStdOut, 0, 11, "EXITING", 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+            Sleep(2000);
+            return 0;
+        }
+    }
 
-    Sleep(2);
-    system("pause");
+}
+void MenuPrint(HANDLE hStdOut)
+{
+    char MenuChar[50] = "Welcome! Choose an Option:";
+    stringprint(hStdOut, 0, 0, MenuChar, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    sprintf(MenuChar, "1: Wordle");
+    stringprint(hStdOut, 0, 2, MenuChar, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    sprintf(MenuChar, "2: Dordle");
+    stringprint(hStdOut, 0, 4, MenuChar, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    sprintf(MenuChar, "Press Esc to Leave");
+    stringprint(hStdOut, 0, 6, MenuChar, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+}
+int Menu(HANDLE hStdOut)
+{
+    char ListWords[14855][5];
+    LoadWordList(ListWords);
+    char keynew = 0, keyprev = 0, run = 1;
+    keynew = key_press();
+    while(1)
+    {
+        run = 1;
+        //EmptyScreen(hStdOut);
+        MenuPrint(hStdOut);
+        keynew = key_press();
+        while(run == 1)
+        {
+            keyprev = keynew;
+            keynew = key_press();
+            if(keyprev != keynew)
+            {
+                keyprev = keynew;
+                switch(keyprev)
+                {
+                    case 27:
+                        EmptyScreen(hStdOut);
+                        return 0;
+                        break;
+
+                    case 49:
+                        EmptyScreen(hStdOut);
+                        WordleRun(hStdOut, ListWords);
+                        EmptyScreen(hStdOut);
+                        //keynew = 0; keyprev = 0;
+                        run = 0;
+                        break;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int main()
+{
+    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    Menu(hStdOut);
+
     return 1;
 }
