@@ -120,8 +120,9 @@ int key_press()
             return i;
         }
     }
-    //return 0;
+    return 0;
 }
+
 int keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
 {
     char keyprev = 0, keynew = 0;
@@ -129,12 +130,11 @@ int keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
     int done = 0;
     while(done == 0)
     {
-        keyprev = keynew; // a w
-        keynew = key_press(); // maybe put the esc statement here
+        keyprev = keynew;
+        keynew = key_press();
         if(keyprev != keynew)
         {
-            keyprev = keynew; //w a
-            //if(keynew > 64 && keynew < 91)
+            keyprev = keynew;
             if(keyprev == 27)
             {
                 return 1;
@@ -144,9 +144,8 @@ int keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
 
                 if(keyprev > 64 && keyprev < 91)
                 {
-                    //write_symbol_in_color(hStdOut, xcoord, ycoord, &keyprev, FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED);
-                    write_symbol_in_color(hStdOut, xcoord, ycoord, &keyprev, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
                     wordtyped[xcoord] = keyprev;
+                    write_symbol_in_color(hStdOut, xcoord, ycoord, &keyprev, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
                     xcoord++;
                 }
             }
@@ -155,7 +154,6 @@ int keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
             {
                 keyprev = ' '; //3
                 xcoord--;
-                //write_symbol_in_color(hStdOut, xcoord, ycoord, &keynew, FOREGROUND_RED | FOREGROUND_INTENSITY); // 3 = ' '
                 write_symbol_in_color(hStdOut, xcoord, ycoord, &keyprev, FOREGROUND_RED | FOREGROUND_INTENSITY ); // 3 = ' '
                 if(xcoord < 0)
                 {
@@ -270,29 +268,48 @@ void emptyScreen(HANDLE hStdOut, int option, int size, int ycoord)
 
 int main()
 {
-    int stop = 0;
-    int maxwords = 5;
-    int wordsize = 5;
     char wordpulled[5];
     char wordtyped[5];
-    int ycoord = 1;
-    int runcheck = 0;
     char ListWords[14855][5];
+    int wordsize = 5, ycoord = 1, runcheck = 0, rngrun = 1;
     int randomnumber = rng(time(&t), 14855);
+    //int randomnumber = 10469;
     HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     pullWord(ListWords);
     for(int cont = 0; cont < 5; cont++)
     {
+        wordtyped[cont] = ' ';
         wordpulled[cont] = ListWords[randomnumber][cont];
         //write_symbol_in_color(hStdOut, cont + 10, 10, &wordpulled[cont], FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
     }
+    while(rngrun == 1)
+    {
+        for(int ii = 0; ii < 4; ii++)
+        {
+            for(int i = ii + 1; i < 5; i++)
+            {
+                if(wordpulled[i] == wordpulled[ii])
+                {
+                    randomnumber = rng(time(&t), 14855);
+                    for(int cont = 0; cont < 5; cont ++)
+                    {
+                        wordpulled[cont] = ListWords[randomnumber][cont];
+                        //write_symbol_in_color(hStdOut, cont + 10, 10, &wordpulled[cont], FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+                        ii = 0;
+                        //break;
+                    }
+                }
+                else
+                {
+                    rngrun = 0;
+                }
+            }
+        }
+    }
     //rngTest(hStdOut);
     char Warn[20] = "Word doesn't exist!"; //19
-    int esccheck = 0;
     while(ycoord < 7)
     {
-        //esccheck = keycheck(hStdOut, wordtyped, ycoord);
-        //keycheck(hStdOut, wordtyped, ycoord);
         if(keycheck(hStdOut, wordtyped, ycoord) == 1)
         {
             ycoord = 10;
@@ -310,6 +327,7 @@ int main()
             for(int cont = 0; cont < 5; cont++)
             {
                 emptyScreen(hStdOut, 1, MAXLETTERS, ycoord);
+                //write_symbol_in_color(hStdOut, cont, ycoord, " ", FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
             }
             if(keycheck(hStdOut, wordtyped, ycoord) == 1)
             {
@@ -337,7 +355,7 @@ int main()
                 }
         }
     }
-    sprintf(Warn , "Word was: %s", wordpulled);
+    sprintf(Warn , "Word was: %.5s", wordpulled);
     stringprint(hStdOut, 0, 8, Warn, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
     Sleep(2);
