@@ -258,7 +258,6 @@ int WordleRun(HANDLE hStdOut, char ListWords[][5])
     char wordtyped[5];
     int ycoord = 2, runcheck = 0, rngrun = 1;
     int randomnumber = rng(time(&t), 14855);
-    randomnumber = 9220;
     for(int cont = 0; cont < 5; cont++)
     {
         wordtyped[cont] = ' ';
