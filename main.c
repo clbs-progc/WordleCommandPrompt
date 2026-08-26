@@ -18,6 +18,7 @@ void write_symbol_in_color(HANDLE h, SHORT x, SHORT y, const char* symbol, WORD 
     WriteConsoleOutputAttribute(h, &attribute, 1, here, &written);
     WriteConsoleOutputCharacterA(h, symbol, 1, here, &written);
 }
+
 void stringprint(HANDLE h, SHORT x, SHORT y, const char* symbol, int set, WORD color)
 {
     DWORD length = (DWORD)strlen(symbol);
@@ -29,7 +30,7 @@ void stringprint(HANDLE h, SHORT x, SHORT y, const char* symbol, int set, WORD c
     here2.Y = y;
     WORD attribute = color;
     DWORD written = 0;
-    DWORD written2 = 0;
+    //DWORD written2 = 0;
     if(set != 0)
     {
         WriteConsoleOutputAttribute(h, &attribute, length, here2, &written);
@@ -51,9 +52,10 @@ void EmptyScreen(HANDLE hStdOut)
         {
             write_symbol_in_color(hStdOut, x, y, " ", FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
         }
-        Sleep(100);
+        Sleep(50);
     }
 }
+
 int contrng = 1;
 int rng(int seed, unsigned int range)
 {
@@ -181,7 +183,8 @@ int keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
             }
 
         }
-        Sleep(10);
+        Sleep(20);
+
     }
     done = 0;
     return 0;
@@ -189,7 +192,6 @@ int keycheck(HANDLE hStdOut, char *wordtyped, int ycoord)
 void LoadWordList(char ReturnWordArray[][5])
 {
     char word[6];
-    char pulledword[6];
     char *result;
     int line = 14855;
     FILE *p = fopen("words.txt","r");
@@ -270,7 +272,7 @@ int WordleRun(HANDLE hStdOut, char ListWords[][5])
     char wordpulled[5];
     char wordtyped[5];
     //char ListWords[14855][5];
-    int wordsize = 5, ycoord = 2, runcheck = 0, rngrun = 1;
+    int ycoord = 2, runcheck = 0, rngrun = 1;
     int randomnumber = rng(time(&t), 14855);
     //int randomnumber = 10469;
     for(int cont = 0; cont < 5; cont++)
@@ -425,6 +427,7 @@ int Menu(HANDLE hStdOut)
 
                 }
             }
+            Sleep(20);
         }
     }
     return 0;
