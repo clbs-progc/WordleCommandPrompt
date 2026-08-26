@@ -19,28 +19,13 @@ void write_symbol_in_color(HANDLE h, SHORT x, SHORT y, const char* symbol, WORD 
     WriteConsoleOutputCharacterA(h, symbol, 1, here, &written);
 }
 
-void stringprint(HANDLE h, SHORT x, SHORT y, const char* symbol, int set, WORD color)
+void stringprint(HANDLE h, SHORT x, SHORT y, const char* symbol)
 {
     DWORD length = (DWORD)strlen(symbol);
     COORD here;
-    COORD here2;
     here.X = x;
-    here2.X = x - length;
     here.Y = y;
-    here2.Y = y;
-    WORD attribute = color;
     DWORD written = 0;
-    //DWORD written2 = 0;
-    if(set != 0)
-    {
-        WriteConsoleOutputAttribute(h, &attribute, length, here2, &written);
-    }
-    else
-    {
-        here2.X = 0;
-        here2.Y = 0;
-        WriteConsoleOutputAttribute(h, &attribute, length, here2, &written);
-    }
     WriteConsoleOutputCharacterA(h, symbol, length, here, &written);
 }
 
@@ -108,18 +93,18 @@ void rngTest(HANDLE hStdOut)
         random = rng(cont, maxnumb);
         percent[random] = percent[random] + 1;
         snprintf(stringtext, sizeof(stringtext), "%i", percent[random]);
-        stringprint(hStdOut, 12, 5+random, stringtext, 0, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+        stringprint(hStdOut, 12, 5+random, stringtext);
         snprintf(stringtext, sizeof(stringtext), "%i", random);
-        stringprint(hStdOut, 12, 16, stringtext, 0, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+        stringprint(hStdOut, 12, 16, stringtext);
         snprintf(stringtext, sizeof(stringtext), "%i", cont);
-        stringprint(hStdOut, 12, 4, stringtext, 0, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+        stringprint(hStdOut, 12, 4, stringtext);
         //Sleep(500);
     }
     for(int cont = 0; cont < maxnumb; cont++)
     {
         a2 = (float) percent[cont]/max;
         snprintf(stringtext, sizeof(stringtext), "%.4f", a2);
-        stringprint(hStdOut, 22, 5+cont, stringtext, 0, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+        stringprint(hStdOut, 22, 5+cont, stringtext);
     }
 }
 
@@ -271,10 +256,9 @@ int WordleRun(HANDLE hStdOut, char ListWords[][5])
     write_symbol_in_color(hStdOut, 5, 0, "E", FOREGROUND_GREEN | FOREGROUND_RED);
     char wordpulled[5];
     char wordtyped[5];
-    //char ListWords[14855][5];
     int ycoord = 2, runcheck = 0, rngrun = 1;
     int randomnumber = rng(time(&t), 14855);
-    //int randomnumber = 10469;
+    randomnumber = 9220;
     for(int cont = 0; cont < 5; cont++)
     {
         wordtyped[cont] = ' ';
@@ -295,7 +279,6 @@ int WordleRun(HANDLE hStdOut, char ListWords[][5])
                         wordpulled[cont] = ListWords[randomnumber][cont];
                         //write_symbol_in_color(hStdOut, cont + 10, 10, &wordpulled[cont], FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
                         ii = 0;
-                        //break;
                     }
                 }
                 else
@@ -305,7 +288,6 @@ int WordleRun(HANDLE hStdOut, char ListWords[][5])
             }
         }
     }
-    //rngTest(hStdOut);
     char Warn[20] = "Word doesn't exist!"; //19
     while(ycoord < 8)
     {
@@ -363,38 +345,47 @@ int WordleRun(HANDLE hStdOut, char ListWords[][5])
         }
     }
     sprintf(Warn , "Word was: %.5s", wordpulled);
-    stringprint(hStdOut, 0, 8, Warn, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    stringprint(hStdOut, 0, 8, Warn);
     sprintf(Warn , "Press ESC to Leave");
-    stringprint(hStdOut, 0, 10, Warn, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    stringprint(hStdOut, 0, 10, Warn);
     Sleep(500);
+    char keynew = 0, keyprev = 0;
+    keynew = key_press();
     while(1)
     {
-        if(keycheck(hStdOut, wordtyped, ycoord) == 1)
+        keyprev = keynew;
+        keynew = key_press();
+        if(keynew != keyprev)
         {
-            stringprint(hStdOut, 0, 11, "EXITING", 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-            Sleep(2000);
-            return 0;
+            keyprev = keynew;
+            if(keyprev == 27)
+            {
+                stringprint(hStdOut, 0, 11, "EXITING");
+                Sleep(2000);
+                return 0;
+            }
         }
+        Sleep(20);
     }
 
 }
 void MenuPrint(HANDLE hStdOut)
 {
     char MenuChar[50] = "Welcome! Choose an Option:";
-    stringprint(hStdOut, 0, 0, MenuChar, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    stringprint(hStdOut, 0, 0, MenuChar);
     sprintf(MenuChar, "1: Wordle");
-    stringprint(hStdOut, 0, 2, MenuChar, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    stringprint(hStdOut, 0, 2, MenuChar);
     sprintf(MenuChar, "2: Dordle");
-    stringprint(hStdOut, 0, 4, MenuChar, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    stringprint(hStdOut, 0, 4, MenuChar);
     sprintf(MenuChar, "Press Esc to Leave");
-    stringprint(hStdOut, 0, 6, MenuChar, 1, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    stringprint(hStdOut, 0, 6, MenuChar);
 }
 int Menu(HANDLE hStdOut)
 {
     char ListWords[14855][5];
     LoadWordList(ListWords);
     char keynew = 0, keyprev = 0, run = 1;
-    keynew = key_press();
+    //keynew = key_press();
     while(1)
     {
         run = 1;
@@ -437,6 +428,7 @@ int main()
 {
     HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     Menu(hStdOut);
+    //rngTest(hStdOut);
 
     return 1;
 }
